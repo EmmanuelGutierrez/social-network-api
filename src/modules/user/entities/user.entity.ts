@@ -1,0 +1,34 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { roles } from 'src/common/constants/roles.enum';
+
+@Schema({ timestamps: { createdAt: true, updatedAt: true } })
+export class User extends Document {
+  @Prop({ type: String, required: true })
+  first_name: string;
+
+  @Prop({ type: String, required: true })
+  last_name: string;
+
+  @Prop({ type: String, required: true, unique: true })
+  email: string;
+
+  @Prop({
+    type: String,
+    required: true,
+    validators: { minlength: 8 },
+    select: false,
+  })
+  password: string;
+
+  @Prop({ type: String })
+  profile_image: string;
+
+  @Prop({ type: Date })
+  birth_date: Date;
+
+  @Prop({ type: String, enum: roles, default: roles.USER })
+  role: roles;
+}
+
+export const UserSchema = SchemaFactory.createForClass(User);

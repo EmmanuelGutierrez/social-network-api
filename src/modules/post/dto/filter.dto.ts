@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class FilterDto {
   @IsOptional()
@@ -9,4 +9,9 @@ export class FilterDto {
   @IsNumber()
   @Min(0)
   page: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
 }

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterDto } from './dto/filter.dto';
 
@@ -12,8 +12,11 @@ export class PostService {
     @InjectModel(Post.name)
     private postModel: Model<Post>,
   ) {}
-  async create(createPostDto: CreatePostDto) {
-    const post = await this.postModel.create(createPostDto);
+  async create(createPostDto: CreatePostDto, userId: string) {
+    const post = await this.postModel.create({
+      ...createPostDto,
+      user: userId,
+    });
     return post;
   }
 
@@ -27,6 +30,26 @@ export class PostService {
     return { page, inThisPage: posts.length, total, posts };
   }
 
+  async me(params: FilterDto, userId: string) {
+    const total = await this.postModel.count({ user: userId });
+    const { limit = 10, page = 1, tags } = params;
+    const filters: FilterQuery<Post> = {};
+    filters.user = userId;
+    if (tags) {
+      /* filters.$or = tags.map((t) => {
+        return {
+          tags: t,
+        };
+      }); */
+      filters.tags = { $elemMatch: { $in: tags } };
+    }
+    const posts = await this.postModel
+      .find(filters)
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return { page, inThisPage: posts.length, total, posts };
+  }
+
   async findOne(id: string) {
     const post = await this.postModel.findById(id);
     if (!post) {
@@ -35,11 +58,10 @@ export class PostService {
     return post;
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto) {
-    console.log('coso');
+  async update(id: string, updatePostDto: UpdatePostDto, userId: string) {
     const updatedPlanificatedMovement = await this.postModel
       .findOneAndUpdate(
-        { $and: [/* { user: userId }, */ { _id: id }] },
+        { $and: [{ user: userId }, { _id: id }] },
         { $set: updatePostDto },
         { new: true },
       )

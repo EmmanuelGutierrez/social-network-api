@@ -1,22 +1,44 @@
-import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Put,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id/mongo-id.pipe';
 import { FilterDto } from './dto/filter.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ReqWithUserI } from 'src/common/models/reqWithToken.model';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { roles } from 'src/common/constants/roles.enum';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post('create')
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postService.create(createPostDto);
+  create(@Body() createPostDto: CreatePostDto, @Req() req: ReqWithUserI) {
+    return this.postService.create(createPostDto, req.user.id);
   }
 
+  @Roles(roles.ADMIN)
   @Get('get-all')
   findAll(@Query() params: FilterDto) {
     return this.postService.findAll(params);
+  }
+
+  @Get('me')
+  findMe(@Query() params: FilterDto, @Req() req: ReqWithUserI) {
+    return this.postService.me(params, req.user.id);
   }
 
   @Get('get-one/:id')
@@ -28,7 +50,8 @@ export class PostController {
   update(
     @Param('id', MongoIdPipe) id: string,
     @Body() updatePostDto: UpdatePostDto,
+    @Req() req: ReqWithUserI,
   ) {
-    return this.postService.update(id, updatePostDto);
+    return this.postService.update(id, updatePostDto, req.user.id);
   }
 }

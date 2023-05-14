@@ -7,6 +7,8 @@ import { config } from './common/config/config';
 import { join } from 'path';
 import * as Joi from 'joi';
 import { DatabaseModule } from './database/database.module';
+import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { DatabaseModule } from './database/database.module';
     }),
     DatabaseModule,
     PostModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
