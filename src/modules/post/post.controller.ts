@@ -19,6 +19,7 @@ import { ReqWithUserI } from 'src/common/models/reqWithToken.model';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { roles } from 'src/common/constants/roles.enum';
+import { CommentPostDto } from './dto/comment-post.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('post')
@@ -53,5 +54,26 @@ export class PostController {
     @Req() req: ReqWithUserI,
   ) {
     return this.postService.update(id, updatePostDto, req.user.id);
+  }
+  @Put('update-reactions/:id')
+  async updateReactions(
+    @Param('id', MongoIdPipe) id: string,
+    @Req() req: ReqWithUserI,
+  ) {
+    return await this.postService.updateReactions(id, req.user.id);
+  }
+
+  @Post('comment/:id')
+  async commentPost(
+    @Param('id', MongoIdPipe) id: string,
+    @Req() req: ReqWithUserI,
+    @Body() body: CommentPostDto,
+  ) {
+    return await this.postService.commentPost(id, req.user.id, body);
+  }
+
+  @Get('comments/:id')
+  async getCommentPost(@Param('id', MongoIdPipe) id: string) {
+    return await this.postService.getCommentsPost(id);
   }
 }
